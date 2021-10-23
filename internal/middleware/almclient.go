@@ -1,10 +1,12 @@
 package middleware
 
 import (
-	"log"
 	"context"
+	"errors"
 	"fmt"
+	"log"
 	"net/http"
+	"strings"
 
 	"github.com/zapkub/pakkretqc/internal/conf"
 	"github.com/zapkub/pakkretqc/internal/perrors"
@@ -30,6 +32,31 @@ func MustGetALMClient(ctx context.Context) *almsdk.Client {
 
 func ALMClient(n http.Handler) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+
+		defer func() {
+			rco := recover()
+			if rco != nil {
+				var err error
+				switch t := rco.(type) {
+				case string:
+					log.Printf("found error string from recover :: %v", rco)
+					err = errors.New(t)
+				case error:
+					log.Printf("found error obj from recover :: %v", rco)
+					err = t
+				default:
+					err = errors.New("Unknown error")
+				}
+
+				errStr := err.Error()
+				log.Printf("errStr :: %v", errStr)
+				if strings.Contains(errStr, "token notfound") {
+					http.Redirect(rw, r, fmt.Sprintf("/login?then=%s", r.RequestURI), http.StatusTemporaryRedirect)
+				} else {
+					http.Error(rw, err.Error(), http.StatusInternalServerError)
+				}
+			}
+		}()
 
 		log.Printf("ALMClient :: URL :: %v", r.URL)
 		n.ServeHTTP(rw, r)

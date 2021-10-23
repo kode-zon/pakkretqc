@@ -16,6 +16,7 @@ import (
 type loginPage struct {
 	Username     string            `json:"username"`
 	Domains      []*almsdk.Domains `json:"domains"`
+	RedirectUrl  string            `json:"redirectUrl"`
 	ErrorMessage string            `json:"errorMessage"`
 }
 
@@ -28,8 +29,11 @@ func (s *Server) loginHandler(w http.ResponseWriter, r *http.Request) {
 		almclient = almsdk.New(&almsdk.ClientOptions{Endpoint: conf.ALMEndpoint()})
 	)
 	defer func() {
+		q := r.URL.Query()
+		loginPage.RedirectUrl = q.Get("then")
 		s.servePage(w, "login", loginPage)
 	}()
+
 	if token == nil {
 		if username := r.FormValue("username"); len(username) > 0 && method == "POST" {
 			log.Printf("login with %s", username)
@@ -43,6 +47,22 @@ func (s *Server) loginHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			log.Printf("login with %s success", username)
+
+			var cookietoken http.Cookie
+			cookietoken.Path = "/"
+			cookietoken.HttpOnly = true
+			cookietoken.Name = session.CookieKey
+			cookietoken.Value = token
+			http.SetCookie(w, &cookietoken)
+
+			if redirect := r.FormValue("redirect"); len(redirect) > 0 {
+
+				log.Printf("redirect to %s", redirect)
+				http.Redirect(w, r, redirect, http.StatusTemporaryRedirect)
+				return
+			}
+
+			//load domains
 			domains, err := almclient.Domains(ctx)
 			if err != nil {
 				log.Println(err)
@@ -53,12 +73,6 @@ func (s *Server) loginHandler(w http.ResponseWriter, r *http.Request) {
 				loginPage.Domains = domains
 			}
 			fmt.Printf("%+v", domains)
-			var cookietoken http.Cookie
-			cookietoken.Path = "/"
-			cookietoken.HttpOnly = true
-			cookietoken.Name = session.CookieKey
-			cookietoken.Value = token
-			http.SetCookie(w, &cookietoken)
 		}
 		return
 	}

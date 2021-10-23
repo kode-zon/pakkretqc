@@ -9,6 +9,7 @@ import { MadeWithLove } from './components';
 interface LoginPageData {
     username: string
     domains: Array<{ name: string }>
+    redirectUrl?: string
     errorMessage?: string
 }
 
@@ -24,6 +25,7 @@ export const LoginPage = (props: { data: LoginPageData }) => {
                 <form className="login-form" method="POST" action="/login">
                     <TextField disabled={!!props.data.username} defaultValue={props.data.username} name="username" placeholder="username" className="text-field" id="username"></TextField>
                     <TextField disabled={!!props.data.username} name="password" placeholder="password" type="password" className="text-field" id="password"></TextField>
+                    <input type="hidden" name="redirect" value={props.data.redirectUrl} />
                     {
                         props.data.errorMessage ?
                             <Text variant="small" style={{color: "#a80000" }}>{props.data.errorMessage}</Text> : null
