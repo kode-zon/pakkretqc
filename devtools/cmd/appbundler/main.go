@@ -48,19 +48,20 @@ func build() {
 		log.Fatalf("build error: %+v", result.Errors)
 	}
 
+	exec.Command("/bin/bash", "-c", fmt.Sprintf("cp -R %s %s", fsutil.PathFromWebDir("bootstrap"), fsutil.PathFromWebDir("dist"))).Run()
 	exec.Command("/bin/bash", "-c", fmt.Sprintf("cp -R %s %s", fsutil.PathFromWebDir("styles"), fsutil.PathFromWebDir("dist"))).Run()
 
 }
 
 func main() {
 
-	f, ferr := os.OpenFile("/var/log/pakkretqc.log", os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
+	f, ferr := os.OpenFile("/var/log/pakkretqc.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if ferr != nil {
 		log.Fatalf("Unable to open file for log: %v", ferr)
 	}
 	defer f.Close()
 
-	log.SetOutput(f);
+	log.SetOutput(f)
 
 	var watch bool
 	flag.BoolVar(&watch, "w", false, "watch change")
