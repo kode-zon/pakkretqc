@@ -1,5 +1,16 @@
 
 declare interface Window { __DATA__: any }
+
+
+declare interface DefectPageProps {
+    data: {
+        defect: Defect
+        attachment: Attachment[]
+        project: string
+        domain: string
+    }
+}
+
 declare interface Defect {
     "user-46": string // this is status
     owner: string
@@ -12,7 +23,6 @@ declare interface Defect {
     "detected-by": string
 
     url: string
-
 }
 
 declare interface Attachment {

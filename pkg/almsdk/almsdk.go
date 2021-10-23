@@ -1,6 +1,8 @@
 package almsdk
 
 import (
+	"log"
+	"crypto/tls"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -49,9 +51,12 @@ type ClientOptions struct {
 
 func New(opt *ClientOptions) *Client {
 	cookieJar, _ := cookiejar.New(nil)
+	transCfg := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
 	return &Client{
 		client: &http.Client{
-			Transport:     http.DefaultTransport,
+			Transport:     transCfg,
 			CheckRedirect: http.DefaultClient.CheckRedirect,
 			Jar:           cookieJar,
 		},
@@ -80,7 +85,6 @@ func (c *Client) setTokenToRequest(ctx context.Context, req *http.Request) {
 var InvalidCredential = fmt.Errorf("invalid credential")
 
 func (c *Client) Authenticate(ctx context.Context, authtoken string) error {
-
 	req, err := http.NewRequest("POST", join(c.config.Endpoint, "authentication/sign-in").String(), nil)
 	req.Header.Add("Content-Type", "application/xml")
 	req.Header.Add("Authorization", fmt.Sprintf("Basic %s", authtoken))
@@ -288,6 +292,7 @@ func IsNetworkError(err error) {
 func (c *Client) Attachments(ctx context.Context, domain, project string, query string, limit, offset int) ([]*Attachment, error) {
 	var req, _ = http.NewRequest("GET", join(c.config.Endpoint, "domains", domain, "projects", project, "attachments").String(), nil)
 	q := req.URL.Query()
+	log.Printf("Attachments :: URL :: %v", req.URL)
 	q.Add("query", fmt.Sprintf("\"%s\"", query))
 	if limit <= 0 {
 		limit = 20
@@ -318,21 +323,33 @@ func (c *Client) Attachments(ctx context.Context, domain, project string, query 
 
 func (c *Client) Attachment(ctx context.Context, domain, project string, id string, w io.Writer) error {
 	var req, _ = http.NewRequest("GET", join(c.config.Endpoint, "domains", domain, "projects", project, "attachments", id).String(), nil)
+	log.Printf("Attachment :: URL :: %v", req.URL)
 	c.setTokenToRequest(ctx, req)
+	req.Header.Set("Accept", "application/octet-stream")
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
-	_, params, _ := mime.ParseMediaType(resp.Header.Get("Content-Type"))
-	mr := multipart.NewReader(resp.Body, params["boundary"])
-	for part, err := mr.NextPart(); err == nil; part, err = mr.NextPart() {
-		if part.FormName() == "content" {
-			_, err = io.Copy(w, part)
-			if err != nil {
-				return err
+	mediaType, params, _ := mime.ParseMediaType(resp.Header.Get("Content-Type"))
+	log.Printf("mediaType = %v", mediaType)
+	if strings.HasPrefix(mediaType, "multipart") {
+		mr := multipart.NewReader(resp.Body, params["boundary"])
+		for part, err := mr.NextPart(); err == nil; part, err = mr.NextPart() {
+			if part.FormName() == "content" {
+				_, err = io.Copy(w, part)
+				if err != nil {
+					return err
+				}
 			}
 		}
+	} else {
+		_, err = io.Copy(w, resp.Body)
+		if err != nil {
+			return err
+		}
 	}
+	
+	
 	return nil
 }

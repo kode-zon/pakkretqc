@@ -1,6 +1,9 @@
 package middleware
 
-import "net/http"
+import (
+	"net/http"
+	"log"
+)
 
 // A Middleware is a func that wraps an http.Handler.
 type Middleware func(http.Handler) http.Handler
@@ -17,6 +20,9 @@ func Chain(middlewares ...Middleware) Middleware {
 		for i := range middlewares {
 			h = middlewares[len(middlewares)-1-i](h)
 		}
-		return h
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			log.Printf("Middleware :: URL :: %v", r.URL)
+			h.ServeHTTP(w, r)
+		})
 	}
 }

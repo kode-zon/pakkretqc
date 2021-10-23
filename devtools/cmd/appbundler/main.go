@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/evanw/esbuild/pkg/api"
-	_ "github.com/evanw/esbuild/pkg/api"
+	// _ "github.com/evanw/esbuild/pkg/api"
 	"github.com/zapkub/pakkretqc/internal/fsutil"
 
 	"github.com/bmatcuk/doublestar"
@@ -37,9 +37,9 @@ func build() {
 		Define: map[string]string{
 			"process.env.NODE_ENV": "'development'",
 		},
-		MinifySyntax:      true,
-		MinifyIdentifiers: true,
-		MinifyWhitespace:  true,
+		MinifySyntax:      false,
+		MinifyIdentifiers: false,
+		MinifyWhitespace:  false,
 		Platform:          api.PlatformBrowser,
 		Tsconfig:          fsutil.PathFromWebDir("app/tsconfig.json"),
 	})
@@ -53,6 +53,14 @@ func build() {
 }
 
 func main() {
+
+	f, ferr := os.OpenFile("/var/log/pakkretqc.log", os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
+	if ferr != nil {
+		log.Fatalf("Unable to open file for log: %v", ferr)
+	}
+	defer f.Close()
+
+	log.SetOutput(f);
 
 	var watch bool
 	flag.BoolVar(&watch, "w", false, "watch change")
