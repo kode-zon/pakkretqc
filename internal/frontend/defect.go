@@ -28,7 +28,7 @@ func (s *Server) defectPageHandler(w http.ResponseWriter, r *http.Request) {
 		almclient = middleware.MustGetALMClient(ctx)
 	)
 
-	deflect, err := almclient.Defect(ctx, domain, project, id)
+	deflect, err := almclient.Defect(ctx, domain, project, id, r)
 	if err != nil {
 		panic(err)
 	}

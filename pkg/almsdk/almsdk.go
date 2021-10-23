@@ -213,11 +213,21 @@ func (a *ALMTime) MarshalJSON() ([]byte, error) {
 	return a.t.MarshalJSON()
 }
 
-func (c *Client) Defect(ctx context.Context, domain, project, id string) (*Defect, error) {
+
+
+func (c *Client) Defect(ctx context.Context, domain, project, id string, orignReq *http.Request) (*Defect, error) {
+
+	log.Printf("Defect :: orignReq.Method :: %+v", orignReq.Method)
+	//  https://stackoverflow.com/questions/38099501/updating-qc-alm-defect-comments-section-using-rest-api
+	// if ctx == "PUT" {
+	// 	var jsonStr = []byte(`{ "Fields": [{ "Name": "dev-comments", "values": [{ "value": "htmltext <div>\"string\"</div>  " }] }] }`)
+	// 	var req, _ = http.NewRequest("GET", join(c.config.Endpoint, "domains", domain, "projects", project, "defects", id).String(), reqBody)
+	// }
 
 	var req, _ = http.NewRequest("GET", join(c.config.Endpoint, "domains", domain, "projects", project, "defects", id).String(), nil)
 	req.Header.Set("Accept", "application/json")
 	c.setTokenToRequest(ctx, req)
+
 
 	log.Printf("Defect :: URL :: %v", req.URL)
 	resp, err := c.client.Do(req)
