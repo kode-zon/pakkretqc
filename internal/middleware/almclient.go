@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"log"
 	"context"
 	"fmt"
 	"net/http"
@@ -30,6 +31,7 @@ func MustGetALMClient(ctx context.Context) *almsdk.Client {
 func ALMClient(n http.Handler) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 
+		log.Printf("ALMClient :: URL :: %v", r.URL)
 		n.ServeHTTP(rw, r)
 	})
 }

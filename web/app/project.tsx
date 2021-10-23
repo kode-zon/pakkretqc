@@ -34,7 +34,7 @@ const ProjectPage = (props: { data: ProjectPageData }) => {
                 <form style={{ flexGrow: 1, display: 'flex' }} method="GET" action={`/domains/${props.data.domain}/projects/${props.data.project}`}>
                     <input type="hidden" name="query" value={qq} />
                     <div style={{flexGrow: 1}}>
-                        <TextField value={qq} onChange={(_, v) => setqq(v)} placeholder="Filter query for example owner = 'rungsikorn.r' "></TextField>
+                        <TextField value={qq} onChange={(_, v) => setqq(v)} placeholder="Filter query for example owner = 'rungsikorn.r', (name='*part of title*' ; owner = 'username.s') "></TextField>
                     </div>
                     <PrimaryButton as="input" type="submit" style={{ marginLeft: 8 }}>Submit</PrimaryButton>
                 </form>

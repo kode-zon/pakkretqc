@@ -219,6 +219,7 @@ func (c *Client) Defect(ctx context.Context, domain, project, id string) (*Defec
 	req.Header.Set("Accept", "application/json")
 	c.setTokenToRequest(ctx, req)
 
+	log.Printf("Defect :: URL :: %v", req.URL)
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, err
@@ -241,11 +242,16 @@ func (c *Client) Defects(ctx context.Context, domain, project string, limit, off
 	q.Add("order-by", orderFlag)
 	q.Add("limit", strconv.Itoa(limit))
 	if qq != "" {
-		q.Add("query", fmt.Sprintf("\"%s\"", qq))
+		if strings.HasPrefix(qq, "{") {
+			q.Add("query", qq)
+		} else {
+			q.Add("query", fmt.Sprintf("\"%s\"", qq))
+		}
 	}
 	req.URL.RawQuery = q.Encode()
 	c.setTokenToRequest(ctx, req)
-	fmt.Println(req.URL.String())
+	//fmt.Println(req.URL.String())
+	log.Printf("Defects :: URL :: %v", req.URL)
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, 0, err
@@ -265,6 +271,7 @@ func (c *Client) Defects(ctx context.Context, domain, project string, limit, off
 	if err != nil {
 		return nil, 0, err
 	}
+	
 	return body.Data, 0, nil
 
 }

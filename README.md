@@ -18,3 +18,10 @@ then devtool will compile typescript files and serve front-end server.
 $ ./build.sh
 $ ./bundler.sh ## optionally packing a tarball
 ```
+
+
+### Defect list query
+- Example 1 `(status > 'New')`
+- Example 2 `(owner = 'name.s')`
+- Example 3 `(status < 'Fixed' ; owner = 'name.s')`
+- Example 4 `(name='*SC8.1*')`
