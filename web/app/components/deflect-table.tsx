@@ -45,6 +45,13 @@ const columns: IColumn[] = [
     {
         key: 'col22',
         name: 'Status',
+        fieldName: 'status',
+        minWidth: 60,
+        isResizable: true,
+    },
+    {
+        key: 'col23',
+        name: 'StatusExt',
         fieldName: 'user-46',
         minWidth: 120,
         isResizable: true,
