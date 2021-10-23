@@ -12,10 +12,10 @@
     margin: 4px 16px;
 }
 
-.w-100 {
-    width: 100%
+.comments-area {
+    min-height: 200px;
+    width: 100%;
 }
-.defects-comments-container {
-    border: 1px solid gray;
-    padding: 10px;
+.comments-area textarea {
+    max-width: 100%;
 }
