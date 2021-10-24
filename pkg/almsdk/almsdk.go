@@ -227,6 +227,31 @@ func (a *ALMTime) MarshalJSON() ([]byte, error) {
 	return a.t.MarshalJSON()
 }
 
+func (c *Client) PutDefect(ctx context.Context, domain, project, id string, orignReq *http.Request, w http.ResponseWriter) error {
+
+	reqBodyBuffer, _ := ioutil.ReadAll(orignReq.Body)
+	var req, _ = http.NewRequest("PUT", join(c.config.Endpoint, "domains", domain, "projects", project, "defects", id).String(), bytes.NewBuffer(reqBodyBuffer))
+	log.Printf("PutDefect :: URL :: %v", req.URL)
+	c.setTokenToRequest(ctx, req)
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != 200 {
+		return NewALMError(resp)
+	}
+
+	w.Header().Set("Content-Type", resp.Header.Get("Content-Type"))
+	bodyBuffer, _ := ioutil.ReadAll(resp.Body)
+	_, err = io.Copy(w, bytes.NewBuffer(bodyBuffer))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (c *Client) Defect(ctx context.Context, domain, project, id string, orignReq *http.Request) (*Defect, error) {
 
 	log.Printf("Defect :: orignReq.Method :: %+v", orignReq.Method)

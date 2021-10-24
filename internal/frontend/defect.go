@@ -28,21 +28,28 @@ func (s *Server) defectPageHandler(w http.ResponseWriter, r *http.Request) {
 		almclient = middleware.MustGetALMClient(ctx)
 	)
 
-	deflect, err := almclient.Defect(ctx, domain, project, id, r)
-	if err != nil {
-		panic(err)
-	}
-	page.Defect = deflect
+	if r.Method == "PUT" {
+		err := almclient.PutDefect(ctx, domain, project, id, r, w)
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		deflect, err := almclient.Defect(ctx, domain, project, id, r)
+		if err != nil {
+			panic(err)
+		}
+		page.Defect = deflect
 
-	attachment, err := almclient.Attachments(ctx, domain, project, fmt.Sprintf("parent-id = %s ; parent-type = '%s'", id, "defect"), 10, 0)
-	if err != nil {
-		panic(err)
-	}
-	page.Attachment = attachment
-	page.Domain = domain
-	page.Project = project
+		attachment, err := almclient.Attachments(ctx, domain, project, fmt.Sprintf("parent-id = %s ; parent-type = '%s'", id, "defect"), 10, 0)
+		if err != nil {
+			panic(err)
+		}
+		page.Attachment = attachment
+		page.Domain = domain
+		page.Project = project
 
-	s.servePage(w, "defect", page)
+		s.servePage(w, "defect", page)
+	}
 }
 
 func (s *Server) attachmentDownloadHandler(w http.ResponseWriter, r *http.Request) {
