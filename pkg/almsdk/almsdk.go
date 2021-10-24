@@ -20,6 +20,17 @@ import (
 	"time"
 )
 
+type ALMUserDetail struct {
+	Phone           string `json:"phone"`
+	Email           string `json:"email"`
+	Description     string `json:"description"`
+	Name            string `json:"Name"`
+	FullName        string `json:"FullName"`
+	UserActive      bool   `json:"UserActive"`
+	UserAvatarCache int    `json:"userAvatarCache"`
+	UserGroups      string `json:"userGroups"`
+}
+
 func NewALMError(resp *http.Response) error {
 	var almerr ALMError
 	var err error
@@ -96,6 +107,9 @@ var InvalidCredential = fmt.Errorf("invalid credential")
 
 func (c *Client) Authenticate(ctx context.Context, authtoken string) error {
 	req, err := http.NewRequest("POST", join(c.config.Endpoint, "authentication/sign-in").String(), nil)
+	if err != nil {
+		return err
+	}
 	req.Header.Add("Content-Type", "application/xml")
 	req.Header.Add("Authorization", fmt.Sprintf("Basic %s", authtoken))
 
@@ -115,6 +129,7 @@ func (c *Client) Authenticate(ctx context.Context, authtoken string) error {
 	}
 	c.token = authtoken
 	c.client.Jar.SetCookies(join(c.config.Endpoint), resp.Cookies())
+
 	return nil
 }
 
@@ -232,8 +247,9 @@ func (c *Client) PutDefect(ctx context.Context, domain, project, id string, orig
 	reqBodyBuffer, _ := ioutil.ReadAll(orignReq.Body)
 	var req, _ = http.NewRequest("PUT", join(c.config.Endpoint, "domains", domain, "projects", project, "defects", id).String(), bytes.NewBuffer(reqBodyBuffer))
 	log.Printf("PutDefect :: URL :: %v", req.URL)
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Content-Type", orignReq.Header.Get("Content-Type"))
 	c.setTokenToRequest(ctx, req)
-
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return err
@@ -283,7 +299,9 @@ func (c *Client) Defect(ctx context.Context, domain, project, id string, orignRe
 
 	bodyBuffer, _ := ioutil.ReadAll(resp.Body)
 	err = json.NewDecoder(bytes.NewBuffer(bodyBuffer)).Decode(&deflect)
-
+	if err != nil {
+		return nil, err
+	}
 	if dbg != "" {
 		log.Printf("Defect :: debug response body :: %v", string(bodyBuffer))
 	}
@@ -796,7 +814,52 @@ func (c *Client) UsedListsCollection(ctx context.Context, domain, project string
 	return "", nil
 }
 
-func (c *Client) UserCollection(ctx context.Context, domain, project string, orignReq *http.Request, w io.Writer) (string, error) {
+func (c *Client) UserDetail(ctx context.Context, domain, project, username string, orignReq *http.Request, w io.Writer) (*ALMUserDetail, error) {
+	// ALM  12.5x REST API Reference (Technical Preview)
+	var req, _ = http.NewRequest("GET", joinRest(c.config.Endpoint, "domains", domain, "projects", project, "customization", "users").String(), nil)
+	q := req.URL.Query()
+	q.Add("name", username)
+	req.URL.RawQuery = q.Encode()
+	c.setTokenToRequest(ctx, req)
+
+	log.Printf("UserDetail :: URL :: %v", req.URL)
+	c.setTokenToRequest(ctx, req)
+	req.Header.Set("Accept", "application/json, */*")
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != 200 {
+		return nil, NewALMError(resp)
+	}
+
+	bodyBuffer, _ := ioutil.ReadAll(resp.Body)
+
+	if w != nil {
+		_, err = io.Copy(w, bytes.NewBuffer(bodyBuffer))
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	}
+
+	type ALMUsersCollection struct {
+		Users []*ALMUserDetail `json:"users"`
+	}
+	var userCollection ALMUsersCollection
+	err = json.NewDecoder(bytes.NewBuffer(bodyBuffer)).Decode(&userCollection)
+	if err != nil {
+		return nil, err
+	}
+	log.Printf("userCollection %v", userCollection)
+	if len(userCollection.Users) < 1 {
+		panic("no data")
+	}
+
+	return userCollection.Users[0], nil
+}
+func (c *Client) UserCollection(ctx context.Context, domain, project string, orignReq *http.Request, w io.Writer) ([]*ALMUserDetail, error) {
 	// ALM  12.5x REST API Reference (Technical Preview)
 	var req, _ = http.NewRequest("GET", joinRest(c.config.Endpoint, "domains", domain, "projects", project, "customization", "users").String(), nil)
 	q := orignReq.URL.Query()
@@ -809,20 +872,29 @@ func (c *Client) UserCollection(ctx context.Context, domain, project string, ori
 
 	resp, err := c.client.Do(req)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	if resp.StatusCode != 200 {
-		return "", NewALMError(resp)
+		return nil, NewALMError(resp)
 	}
 
 	bodyBuffer, _ := ioutil.ReadAll(resp.Body)
-	// if dbg != "" {
-	// 	log.Printf("Defect :: debug response body :: %v", string(bodyBuffer))
-	// }
-	_, err = io.Copy(w, bytes.NewBuffer(bodyBuffer))
-	if err != nil {
-		return "", err
+	if w != nil {
+		_, err = io.Copy(w, bytes.NewBuffer(bodyBuffer))
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	return "", nil
+	type ALMUsersCollection struct {
+		Users []*ALMUserDetail `json:"users"`
+	}
+
+	var userCollection ALMUsersCollection
+	err = json.NewDecoder(bytes.NewBuffer(bodyBuffer)).Decode(&userCollection)
+	if err != nil {
+		return nil, err
+	}
+
+	return (userCollection.Users), nil
 }

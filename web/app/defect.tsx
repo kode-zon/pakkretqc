@@ -9,7 +9,7 @@ const DefectPage = (props: DefectPageProps) => {
         <Fabric>
             <div className="defect-container">
                 <div className="defect-detail-container" >
-                    <DefectDetail defect={props.data.defect} domain={props.data.domain} project={props.data.project}  attachments={props.data.attachment} />
+                    <DefectDetail data={props.data} />
                 </div>
                 <div className="defect-attachments-container">
                     <Attachments domain={props.data.domain} project={props.data.project} attachments={props.data.attachment} />

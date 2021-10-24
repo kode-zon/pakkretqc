@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/zapkub/pakkretqc/internal/fsutil"
+	"github.com/zapkub/pakkretqc/internal/session"
 )
 
 type Server struct {
@@ -77,8 +78,9 @@ func New() *Server {
 }
 
 func UserName(r *http.Request) string {
-	if usernamecookie, err := r.Cookie("username"); err == nil {
+	if usernamecookie, err := r.Cookie(session.UserName); err == nil {
 		return usernamecookie.Value
 	}
+
 	return ""
 }

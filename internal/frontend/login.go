@@ -55,6 +55,13 @@ func (s *Server) loginHandler(w http.ResponseWriter, r *http.Request) {
 			cookietoken.Value = token
 			http.SetCookie(w, &cookietoken)
 
+			var cookieUsername http.Cookie
+			cookieUsername.Path = "/"
+			cookieUsername.HttpOnly = true
+			cookieUsername.Name = session.UserName
+			cookieUsername.Value = username
+			http.SetCookie(w, &cookieUsername)
+
 			if redirect := r.FormValue("redirect"); len(redirect) > 0 {
 
 				log.Printf("redirect to %s", redirect)

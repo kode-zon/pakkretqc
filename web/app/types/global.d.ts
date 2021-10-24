@@ -1,6 +1,7 @@
 
 declare interface Window { __DATA__: any }
 
+declare type ContentWrapperMode = 'wrap'|'unwrap'
 
 declare interface DefectPageProps {
     data: {
@@ -8,6 +9,8 @@ declare interface DefectPageProps {
         attachment: Attachment[]
         project: string
         domain: string
+        username: string
+        userfullname: string
     }
 }
 
@@ -41,5 +44,4 @@ declare interface Attachment {
         id: string
         type: string
     };
-
 }
