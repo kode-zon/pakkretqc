@@ -52,7 +52,7 @@ func (s *Server) attachmentDownloadHandler(w http.ResponseWriter, r *http.Reques
 		vars      = mux.Vars(r)
 		domain    = vars["domain"]
 		project   = vars["project"]
-		id        = vars["id"]	//attach id
+		id        = vars["id"] //attach id
 		almclient = middleware.MustGetALMClient(ctx)
 	)
 
