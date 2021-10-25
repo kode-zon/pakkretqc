@@ -1,0 +1,5 @@
+**/private.*
+.*
+dist
+web/dist
+Dockerfile
