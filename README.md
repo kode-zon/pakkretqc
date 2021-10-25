@@ -12,6 +12,11 @@ $ PAKKRETQC_ALM_ENDPOINT=https://[your-alm-hpqc-endpoint] go run devtools/cmd/ap
 ```
 then devtool will compile typescript files and serve front-end server.
 
+## First build
+need to install node_modules first.
+```
+$ npm i
+```
 
 ## Build
 ```
