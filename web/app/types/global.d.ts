@@ -3,6 +3,17 @@ declare interface Window { __DATA__: any }
 
 declare type ContentWrapperMode = 'wrap'|'unwrap'
 
+declare interface ALMUsedListItemEntry {
+    "LogicalName": string,
+    "value": string
+}
+declare interface ALMUsedListEntry {
+    "Name": string,
+    "Id": number,
+    "LogicalName": string,
+    "Items": ALMUsedListItemEntry[]
+}
+
 declare interface DefectPageProps {
     data: {
         defect: Defect
@@ -15,7 +26,9 @@ declare interface DefectPageProps {
 }
 
 declare interface Defect {
-    "user-46": string // this is status
+    id: number,
+    status: string
+    "user-46": string // this is extra status (show as [old status] - [current status])
     owner: string
     name: string
     severity: string
