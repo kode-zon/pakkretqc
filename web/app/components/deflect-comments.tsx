@@ -143,11 +143,16 @@ export const DefectComments = (props:  DefectPageProps) => {
         //         }]
         //     }]
         // }
+        var wrapEditingComments = editingComments;
+        if(!wrapEditingComments.includes("<html>")) {
+            wrapEditingComments = `<html>${editingComments}</html>`
+        }
         const postBody = {
             Fields: {
-                "dev-comments": editingComments
+                "dev-comments": `${wrapEditingComments}`
             }
         }
+        
         const reqMetadata = {
             method: 'PUT',
             headers: {
@@ -155,21 +160,29 @@ export const DefectComments = (props:  DefectPageProps) => {
             },
             body: JSON.stringify(postBody)
         }
+        console.debug("reqMetadata", reqMetadata);
 
         submitBtnRef.current.disabled = true
 
         fetch(putUrl, reqMetadata)
-            .then(res => res.json())
-            .then(resp => {
-                console.log("save response", resp)
-                alert("done");
-                submitBtnRef.current.disabled = false
+            .then(res => {
+                if(res.ok) {
+                    let resp = res.json();
+
+                    console.log("save response", resp);
+                    alert("done");
+                    submitBtnRef.current.disabled = false
+                } else {
+                    res.text().then(text => {
+                        submitBtnRef.current.disabled = false
+                        alert("error:"+text)
+                    });
+                }
             })
             .catch(reason => {
                 submitBtnRef.current.disabled = false
                 alert("error:"+reason)
             })
-            
     }
 
     const contentWrapperFn = (mode: ContentWrapperMode, content:string):string => {
