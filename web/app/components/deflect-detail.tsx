@@ -45,7 +45,7 @@ export const DefectDetail = (props: DefectPageProps) => {
             <div className="d-flex justify-content-between">
                 <h3>🐞 {props.data.defect.name} </h3>
                 <div>
-                    <button onClick={dialogUpdateDefect}>✎</button>
+                    <button onClick={dialogUpdateDefect} className="text-nowrap">✎ edit-props</button>
                 </div>
             </div>
             <div className="panel-footer d-flex justify-content-between">
