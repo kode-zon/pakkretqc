@@ -1,9 +1,12 @@
-import { RefObject, Modal, IDragOptions, ContextualMenu, mergeStyleSets, getTheme, FontWeights, IconButton, IIconProps, ComboBox, IComboBox, IComboBoxOption } from 'office-ui-fabric-react';
+import { RefObject, Modal, IDragOptions, ContextualMenu, mergeStyleSets, getTheme, FontWeights, IconButton, IIconProps, ComboBox, IComboBox, IComboBoxOption, DatePicker, DayOfWeek, IDatePickerStrings, initializeIcons, MaskedTextField } from 'office-ui-fabric-react';
 import * as React from 'react'
+import { DateTimePicker } from './datetime-picker-control';
 
 export interface IDefectEditModal {
     openModal: () => void;
 }
+
+initializeIcons();
 
 export const DefectEditModal = React.forwardRef((props: { 
                                     data:DefectPageProps, 
@@ -46,8 +49,9 @@ export const DefectEditModal = React.forwardRef((props: {
             }
         },
         footer: {
-            position: 'absolute',
-            bottom: '0',
+            // position: 'absolute',
+            'margin-top': '20px',
+            // bottom: '0',
             width: '100%',
             'align-items': 'center',
             'justify-content': 'center'
@@ -247,6 +251,28 @@ export const DefectEditModal = React.forwardRef((props: {
         setModalState(editingModalState);
         console.debug("assignChanged", editingModalState.defectProp);
     }
+    
+    const dateToQcDateStr = (date:Date):string => {
+        if(date == null) return null;
+        return `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
+    }
+
+    const plannedFixDateChanged = (date:Date|null|undefined) => {
+        // user-29
+        const almFieldName = "user-29";
+        editingModalState.defectProp[almFieldName] = ""+date;
+        editingModalState.structForSave.Fields[almFieldName] = dateToQcDateStr(date);
+        setModalState(editingModalState);
+        console.debug("plannedFixDateChanged", editingModalState.defectProp);
+    }
+    const planDeploymemntDateChanged = (date:Date|null|undefined) => {
+        // user-41
+        const almFieldName = "user-41";
+        editingModalState.defectProp[almFieldName] = ""+date;
+        editingModalState.structForSave.Fields[almFieldName] = dateToQcDateStr(date);
+        setModalState(editingModalState);
+        console.debug("planDeploymemntDateChanged", editingModalState.defectProp);
+    }
 
     return (
         <>
@@ -288,14 +314,33 @@ export const DefectEditModal = React.forwardRef((props: {
                                 ></ComboBox>
                         </div>
                     </div>
-                </div>
+                    
+                    <div className="row">
+                        <div className="col-6">
+                            <DateTimePicker label="Planned fix Date"
+                                dateTimeValue={editingModalState.defectProp['user-29']}
+                                placeholder="Planned fix Date"
+                                onChanged={plannedFixDateChanged}></DateTimePicker>
+                        </div>
+                        <div className="col-6">
+                            <DateTimePicker label="Plan deployment Date"
+                                dateTimeValue={editingModalState.defectProp['user-41']}
+                                placeholder="Plan deployment Date"
+                                onChanged={planDeploymemntDateChanged}></DateTimePicker>
+                        </div>
+                    </div>
 
-                <div className={contentStyles.footer + " d-flex"}>
-                    <div>
-                        <button onClick={doSave} ref={saveBtnRef}>save</button>
-                        <button onClick={doCancel}>cancel</button>
+
+
+                    <div className={contentStyles.footer + " d-flex"}>
+                        <div>
+                            <button onClick={doSave} ref={saveBtnRef}>save</button>
+                            <button onClick={doCancel}>cancel</button>
+                        </div>
                     </div>
                 </div>
+
+                
             </Modal>
         </>
     )

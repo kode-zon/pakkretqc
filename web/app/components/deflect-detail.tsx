@@ -52,10 +52,12 @@ export const DefectDetail = (props: DefectPageProps) => {
                 <div>
                     <div><b>Detected By:</b> {props.data.defect["detected-by"]} (create on {props.data.defect["creation-time"]} )</div>
                     <div><b>Assigned to:</b> {props.data.defect["owner"]}</div>
+                    <div><b>plan fix date:</b> {props.data.defect["user-29"]}</div>
                 </div>
                 <div>
                     <div title="prev - current"><b>Status:</b> {props.data.defect["user-46"]}</div>
-                    <div ><b>Last modified:</b> {props.data.defect["last-modified"]}</div>
+                    <div><b>Last modified:</b> {props.data.defect["last-modified"]}</div>
+                    <div><b>plan deployment date:</b> {props.data.defect["user-41"]}</div>
                 </div>
             </div>
             <hr/>

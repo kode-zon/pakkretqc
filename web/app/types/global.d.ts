@@ -37,6 +37,8 @@ declare interface Defect {
     "last-modified": string
     "creation-time": string
     "detected-by": string
+    "user-29": string // this is Planned Fix Date
+    "user-41": string // this is Plan Deployment Date
 
     url: string
 }

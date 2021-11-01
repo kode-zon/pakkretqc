@@ -196,6 +196,8 @@ func (c *Client) Domains(ctx context.Context) ([]*Domains, error) {
 }
 
 type Defect struct {
+	PlnFixDate   *ALMTime `json:"user-29"`
+	PlnDplyDate  *ALMTime `json:"user-41"`
 	DevComments  string   `json:"dev-comments"`
 	Description  string   `json:"description"`
 	LastModified *ALMTime `json:"last-modified"`
