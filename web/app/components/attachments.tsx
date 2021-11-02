@@ -31,7 +31,46 @@ const columns: (domain: string, project: string) => IColumn[] = (domain, project
 
 ]
 
-export const Attachments = (props: { domain: string, project: string, attachments: Attachment[] }) => {
+export const Attachments = (props: { domain: string, project: string, defectId: number, attachments: Attachment[] }) => {
+
+    const [state, setState] = React.useState({theFile:null, desc:"desc of file"})
+
+    const changeFile = (e) => {
+        setState({theFile: e.target.files[0], desc:state.desc})
+    }
+    const changeDesc = (e) => {
+        setState({theFile: state.theFile, desc:e.target.value})
+    }
+    const uploadFile = () => {
+        let formData = new FormData();
+        formData.append("description", `${state.desc}`);
+        formData.append("filename", state.theFile.name);
+        formData.append("file", state.theFile, state.theFile.name);
+        
+        let targetUrl =`/domains/${props.domain}/projects/${props.project}/defects/${props.defectId}/attachments`
+        fetch(
+            targetUrl,
+            {
+                method: 'POST',
+                body: formData
+            }
+        ).then((resp) => {
+            console.debug("uploadFile response")
+            if(resp.ok) {
+                resp.json().then(result => {
+                    console.log("Attach success:", result);
+                });
+                return;
+            }
+            resp.text().then(text => {
+                alert("error:"+text)
+            });
+        })
+        .catch(reason => {
+            alert("error:"+reason)
+        });
+    }
+
     return (
         <>
             <h3>📑 Attachments</h3>
@@ -41,6 +80,14 @@ export const Attachments = (props: { domain: string, project: string, attachment
                     columns={columns(props.domain, props.project)}
                     items={props.attachments}
                 />
+                <hr/>
+                <div>
+                    <input type="file" onChange={changeFile} className="border"></input>
+                    <br/>
+                    note : <input type="text" onChange={changeDesc} className="border"></input>
+                    <br/>
+                    <button onClick={uploadFile} disabled={state.theFile==null}>Upload</button>
+                </div>
             </div>
         </>
     )

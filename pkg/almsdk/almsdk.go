@@ -13,6 +13,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/cookiejar"
+	"net/http/httputil"
 	"net/url"
 	"path"
 	"strconv"
@@ -101,6 +102,7 @@ func (c *Client) setTokenToRequest(ctx context.Context, req *http.Request) {
 		req.Header.Set("Authorization", "Basic "+token)
 		c.Authenticate(ctx, token)
 	}
+
 }
 
 var InvalidCredential = fmt.Errorf("invalid credential")
@@ -394,18 +396,21 @@ func (c *Client) Attachments(ctx context.Context, domain, project string, query 
 	if resp.StatusCode != 200 {
 		return nil, NewALMError(resp)
 	}
+
+	bodyBuffer, _ := ioutil.ReadAll(resp.Body)
 	type respbody struct {
 		Data []*Attachment `json:"data"`
 	}
 	var body respbody
-	err = json.NewDecoder(resp.Body).Decode(&body)
+	log.Printf("Attachments :: response :: %v", string(bodyBuffer))
+	err = json.NewDecoder(bytes.NewBuffer(bodyBuffer)).Decode(&body)
 	if err != nil {
 		return nil, err
 	}
 	return body.Data, nil
 }
 
-func (c *Client) Attachment(ctx context.Context, domain, project string, id string, w io.Writer) error {
+func (c *Client) Attachment(ctx context.Context, domain, project string, id string, orignReq *http.Request, w http.ResponseWriter) error {
 	var req, _ = http.NewRequest("GET", join(c.config.Endpoint, "domains", domain, "projects", project, "attachments", id).String(), nil)
 	log.Printf("Attachment :: URL :: %v", req.URL)
 	c.setTokenToRequest(ctx, req)
@@ -415,6 +420,14 @@ func (c *Client) Attachment(ctx context.Context, domain, project string, id stri
 		return err
 	}
 	defer resp.Body.Close()
+
+	// copy header from ALM-response to the response
+	for name, headers := range resp.Header {
+		for _, headerValue := range headers {
+			w.Header().Set(name, headerValue)
+		}
+	}
+
 	mediaType, params, _ := mime.ParseMediaType(resp.Header.Get("Content-Type"))
 	log.Printf("mediaType = %v", mediaType)
 	if strings.HasPrefix(mediaType, "multipart") {
@@ -899,4 +912,52 @@ func (c *Client) UserCollection(ctx context.Context, domain, project string, ori
 	}
 
 	return (userCollection.Users), nil
+}
+
+func (c *Client) PostAttachment(ctx context.Context, domain, project, entityCollection, entityId string, orignReq *http.Request, w http.ResponseWriter) error {
+
+	reqBodyBuffer, _ := ioutil.ReadAll(orignReq.Body)
+	var req, _ = http.NewRequest("POST", joinRest(c.config.Endpoint, "domains", domain, "projects", project, entityCollection, entityId, "attachments").String(), bytes.NewBuffer(reqBodyBuffer))
+
+	// copy header from original
+	for name, headers := range orignReq.Header {
+		for _, headerValue := range headers {
+			req.Header.Set(name, headerValue)
+		}
+	}
+
+	// copy querystring from original
+	q := orignReq.URL.Query()
+	req.URL.RawQuery = q.Encode()
+
+	// set cookie token
+	c.setTokenToRequest(ctx, req)
+
+	log.Printf("PostAttachment :: #############################################################")
+	debugReq, _ := httputil.DumpRequestOut(req, false)
+	log.Printf("PostAttachment :: DUMP :: %v", string(debugReq))
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return NewALMError(resp)
+	}
+
+	// copy header from ALM-response to the response
+	for name, headers := range resp.Header {
+		for _, headerValue := range headers {
+			w.Header().Set(name, headerValue)
+		}
+	}
+	//w.Header().Set("Content-Type", resp.Header.Get("Content-Type"))
+	bodyBuffer, _ := ioutil.ReadAll(resp.Body)
+	_, err = io.Copy(w, bytes.NewBuffer(bodyBuffer))
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

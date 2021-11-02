@@ -30,6 +30,7 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	handle("/login", http.HandlerFunc(s.loginHandler))
 	handle("/domains/{domain}/projects/{project}/{collection_name}/$metadata/fields", http.HandlerFunc(s.metadataHandler))
 	handle("/domains/{domain}/projects/{project}/attachments/{id}", http.HandlerFunc(s.attachmentDownloadHandler))
+	handle("/domains/{domain}/projects/{project}/defects/{id}/attachments", http.HandlerFunc(s.defectAttachmentUploadHandler))
 	handle("/domains/{domain}/projects/{project}/defects/{id}", http.HandlerFunc(s.defectPageHandler))
 	handle("/domains/{domain}/projects/{project}/test-instances/{id}", http.HandlerFunc(s.testInstancesHandler))
 	handle("/domains/{domain}/projects/{project}/list-items", http.HandlerFunc(s.listItemsHandler))

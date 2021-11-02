@@ -209,6 +209,7 @@ export const DefectEditModal = React.forwardRef((props: {
                     console.log("save response", resp)
                     alert("done");
                     setDisabledSaveBtn(false);
+                    return;
                 }
                 res.text().then(text => {
                     setDisabledSaveBtn(false);

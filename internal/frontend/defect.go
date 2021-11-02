@@ -79,9 +79,28 @@ func (s *Server) attachmentDownloadHandler(w http.ResponseWriter, r *http.Reques
 		almclient = middleware.MustGetALMClient(ctx)
 	)
 
-	err := almclient.Attachment(ctx, domain, project, id, w)
+	err := almclient.Attachment(ctx, domain, project, id, r, w)
 	if err != nil {
 		log.Printf("ERROR: %+v", err)
+	}
+
+}
+
+func (s *Server) defectAttachmentUploadHandler(w http.ResponseWriter, r *http.Request) {
+
+	var (
+		ctx       = r.Context()
+		vars      = mux.Vars(r)
+		domain    = vars["domain"]
+		project   = vars["project"]
+		id        = vars["id"]
+		almclient = middleware.MustGetALMClient(ctx)
+	)
+
+	err := almclient.PostAttachment(ctx, domain, project, "defects", id, r, w)
+	if err != nil {
+		log.Printf("ERROR: %+v", err)
+		panic(err)
 	}
 
 }
